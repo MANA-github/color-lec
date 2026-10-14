@@ -135,7 +135,36 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
   }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function setupSwitch(group, activeSel) {
+    const thumb = document.createElement('span');
+    thumb.className = 'switch-thumb';
+    group.prepend(thumb);
+    group.classList.add('has-thumb');
+    let lastW = 0;
+
+    const update = () => {
+      const btn = group.querySelector(activeSel);
+      if (!btn || !btn.offsetWidth) { lastW = 0; return; }
+      if (!lastW) group.classList.add('thumb-instant');
+      thumb.style.width = btn.offsetWidth + 'px';
+      thumb.style.height = btn.offsetHeight + 'px';
+      thumb.style.transform = `translate(${btn.offsetLeft}px, ${btn.offsetTop}px)`;
+      lastW = btn.offsetWidth;
+      if (group.classList.contains('thumb-instant')) {
+        void thumb.offsetWidth;
+        requestAnimationFrame(() => group.classList.remove('thumb-instant'));
+      }
+      group.classList.add('thumb-ready');
+    };
+
+    new MutationObserver(update).observe(group, { attributes: true, subtree: true, attributeFilter: ['aria-pressed', 'aria-selected'] });
+    new ResizeObserver(update).observe(group);
+    update();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tabs').forEach(g => setupSwitch(g, '[aria-selected="true"]'));
+    document.querySelectorAll('.seg').forEach(g => setupSwitch(g, '[aria-pressed="true"]'));
     document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
     const fileInput = document.getElementById('fileInput');
